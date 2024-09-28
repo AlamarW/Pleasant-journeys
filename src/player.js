@@ -1,13 +1,4 @@
-const http = require('node:http');
-const fs = require('fs');
-
-const HTTP_STATUS_OK = 200;
-const HTTP_STATUS_INTERNAL_SERVER_ERROR = 500;
-
-const HOSTNAME = '127.0.0.1';
-const PORT = 3000;
-
-// ----------------------------------------------------------------------------
+const { HTTP_STATUS, respondWith } = require("./shared");
 
 var blocks = 10000;
 
@@ -34,29 +25,7 @@ setInterval(function() {
   }
 }, 300);
 
-// ----------------------------------------------------------------------------
-
-const serveStressTest = (response) => {
-  response.statusCode = HTTP_STATUS_OK;
-  response.setHeader('Content-Type', 'text/html');
-
-  fs.readFile('public/index.html', (err, data) => {
-    if (err) {
-      response.statusCode = HTTP_STATUS_INTERNAL_SERVER_ERROR;
-      response.end('Error loading index.html');
-      return;
-    }
-    response.end(data);
-  });
-};
-
-const serveAllData = (response) => {
-  response.statusCode = HTTP_STATUS_OK;
-  response.setHeader('Content-Type', 'text/plain');
-  response.end(iposz.join(',') + "z" + icolz.join(','));
-};
-
-const handlePlayerMovement = (request, response) => {
+function handleMovement(request, response) {
   const requestParts = request.url.split("-");
   const playerIndex = parseInt(requestParts[3]);
 
@@ -78,28 +47,18 @@ const handlePlayerMovement = (request, response) => {
       break;
   }
 
-  response.statusCode = HTTP_STATUS_OK;
-  response.setHeader('Content-Type', 'text/plain');
-  response.end("k");
+  respondWith(response, HTTP_STATUS.OK, "k");
+}
+
+function serveAllData(response) {
+  const data = iposz.join(',') + "z" + icolz.join(',');
+  respondWith(response, HTTP_STATUS.OK, data);
+}
+
+module.exports = {
+  serveAllData,
+  handleMovement
 };
-
-const server = http.createServer((req, res) => {
-  if (req.url === "/stress") {
-    serveStressTest(res);
-  } else if (req.url === "/alldata") {
-    serveAllData(res);
-  } else if (req.url.startsWith("/callit-_-")) {
-    handlePlayerMovement(req, res);
-  } else {
-    res.statusCode = 404;
-    res.setHeader('Content-Type', 'text/plain');
-    res.end('404: Page Not Found');
-  }
-});
-
-server.listen(PORT, HOSTNAME, () => {
-  console.log(`Server running at http://${HOSTNAME}:${PORT}/`);
-});
 
 // ----------------------------------------------------------------------------
 
@@ -142,5 +101,3 @@ server.listen(PORT, HOSTNAME, () => {
 //         }
 //     }
 // }
-
-
