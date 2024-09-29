@@ -2,7 +2,7 @@ const http = require('node:http');
 const fs = require('fs');
 const path = require('path');
 const player = require('./player');
-const { HTTP_STATUS, respondWith } = require("./shared");
+const { HTTP_STATUS, respondWith } = require("./defs");
 
 const HOSTNAME = '127.0.0.1';
 const PORT = 3000;

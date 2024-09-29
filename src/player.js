@@ -1,4 +1,4 @@
-const { HTTP_STATUS, respondWith } = require("./shared");
+const { HTTP_STATUS, respondWith } = require("./defs");
 
 var blocks = 10000;
 
