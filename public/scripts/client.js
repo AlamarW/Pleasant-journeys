@@ -1,12 +1,11 @@
 const canvas = document.getElementById("canvas");
 const context = canvas.getContext("2d");
 
-const PLAYER_INDEX = 0; // const for now
+const DEBUG_MODE = true;
+let PADDING_PX = 48, BORDER_PX = 4;
 
-const CANVAS_WIDTH = canvas.width;
-const CANVAS_HEIGHT = canvas.height;
-const HALF_WIDTH = CANVAS_WIDTH / 2;
-const HALF_HEIGHT = CANVAS_HEIGHT / 2;
+const PLAYER_INDEX = 0; // const for now
+let canvasWidth, canvasHeight, halfWidth, halfHeight;
 
 // ----------------------------------------------------------------------------
 
@@ -45,10 +44,10 @@ async function fetchGameData() {
 
 function drawEntity(dx, dy, dz, color, height) {
   context.beginPath();
-  context.moveTo(dx / (dz + 4) * HALF_WIDTH + HALF_WIDTH, HALF_HEIGHT - dy / (dz + 4) * HALF_HEIGHT);
-  context.lineTo((dx - 4) / (dz + 4) * HALF_WIDTH + HALF_WIDTH, HALF_HEIGHT - (dy + 4) / (dz + 4) * HALF_HEIGHT);
-  context.lineTo(dx / (dz + 4) * HALF_WIDTH + HALF_WIDTH, HALF_HEIGHT - (dy + 8 * height) / (dz + 4) * HALF_HEIGHT);
-  context.lineTo((dx + 4) / (dz + 4) * HALF_WIDTH + HALF_WIDTH, HALF_HEIGHT - (dy + 4) / (dz + 4) * HALF_HEIGHT);
+  context.moveTo(dx / (dz + 4) * halfWidth + halfWidth, halfHeight - dy / (dz + 4) * halfHeight);
+  context.lineTo((dx - 4) / (dz + 4) * halfWidth + halfWidth, halfHeight - (dy + 4) / (dz + 4) * halfHeight);
+  context.lineTo(dx / (dz + 4) * halfWidth + halfWidth, halfHeight - (dy + 8 * height) / (dz + 4) * halfHeight);
+  context.lineTo((dx + 4) / (dz + 4) * halfWidth + halfWidth, halfHeight - (dy + 4) / (dz + 4) * halfHeight);
   context.closePath();
 
   context.lineWidth = 200 / dz;
@@ -56,10 +55,10 @@ function drawEntity(dx, dy, dz, color, height) {
   context.stroke();
 
   context.beginPath();
-  context.moveTo(dx / dz * HALF_WIDTH + HALF_WIDTH, HALF_HEIGHT - dy / dz * HALF_HEIGHT);
-  context.lineTo((dx - 4) / dz * HALF_WIDTH + HALF_WIDTH, HALF_HEIGHT - (dy + 4) / dz * HALF_HEIGHT);
-  context.lineTo(dx / dz * HALF_WIDTH + HALF_WIDTH, HALF_HEIGHT - (dy + 8 * height) / dz * HALF_HEIGHT);
-  context.lineTo((dx + 4) / dz * HALF_WIDTH + HALF_WIDTH, HALF_HEIGHT - (dy + 4) / dz * HALF_HEIGHT);
+  context.moveTo(dx / dz * halfWidth + halfWidth, halfHeight - dy / dz * halfHeight);
+  context.lineTo((dx - 4) / dz * halfWidth + halfWidth, halfHeight - (dy + 4) / dz * halfHeight);
+  context.lineTo(dx / dz * halfWidth + halfWidth, halfHeight - (dy + 8 * height) / dz * halfHeight);
+  context.lineTo((dx + 4) / dz * halfWidth + halfWidth, halfHeight - (dy + 4) / dz * halfHeight);
   context.closePath();
 
   context.lineWidth = 200 / dz;
@@ -73,15 +72,15 @@ function renderScene(playerPosition, iconPositions, colors) {
   // sort by depth (pz)
   iconPositions.sort((a, b) => (b & 0x1FF) - (a & 0x1FF));
 
-  context.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+  context.clearRect(0, 0, canvasWidth, canvasHeight);
 
   // draw ground
   context.fillStyle = "green";
-  context.fillRect(0, HALF_HEIGHT, CANVAS_WIDTH, HALF_HEIGHT);
+  context.fillRect(0, halfHeight, canvasWidth, halfHeight);
 
   // draw sky
   context.fillStyle = "#c0ffff";
-  context.fillRect(0, 0, CANVAS_WIDTH, HALF_HEIGHT);
+  context.fillRect(0, 0, canvasWidth, halfHeight);
 
   // draw grid lines
   for (let a1 = -5; a1 <= 5; a1++) {
@@ -92,8 +91,8 @@ function renderScene(playerPosition, iconPositions, colors) {
         const dx = a1 * 100 + 100 + (px % 100);
 
         context.beginPath();
-        context.moveTo(dx / dz * HALF_WIDTH + HALF_WIDTH, HALF_HEIGHT - dy / dz * HALF_HEIGHT);
-        context.lineTo(dx / dz * HALF_WIDTH + HALF_WIDTH, HALF_HEIGHT - (20 + dy) / dz * HALF_HEIGHT);
+        context.moveTo(dx / dz * halfWidth + halfWidth, halfHeight - dy / dz * halfHeight);
+        context.lineTo(dx / dz * halfWidth + halfWidth, halfHeight - (20 + dy) / dz * halfHeight);
         context.closePath();
 
         context.lineWidth = 200 / dz;
@@ -125,6 +124,17 @@ function renderScene(playerPosition, iconPositions, colors) {
 
 // -----------------------------------------------------------------------------
 
+function resizeCanvas() {
+  const PAD = PADDING_PX + BORDER_PX;
+  canvas.width = window.innerWidth - PAD * 2;
+  canvas.height = window.innerHeight - PAD * 2;
+
+  canvasWidth = canvas.width;
+  canvasHeight = canvas.height;
+  halfWidth = canvasWidth / 2;
+  halfHeight = canvasHeight / 2;
+}
+
 async function gameLoop() {
   const data = await fetchGameData();
   if (data) {
@@ -137,11 +147,26 @@ async function gameLoop() {
 
 // ----------------------------------------------------------------------------
 
-window.addEventListener('keypress', function(event) {
+window.addEventListener("resize", resizeCanvas);
+
+window.addEventListener("keypress", (event) => {
   const url = `/callit-_-${event.key}-${PLAYER_INDEX}`;
   fetch(url);
 });
 
-// -----------------------------------------------------------------------------
+if (DEBUG_MODE) {
+  PADDING_PX = 48; BORDER_PX = 4;
+} else {
+  PADDING_PX = 0; BORDER_PX = 0;
+  const debugTextDiv = document.querySelector(".debug-text");
+  if (debugTextDiv) {
+    debugTextDiv.remove();
+  }
+}
 
+document.body.style.margin = "0";
+document.body.style.padding = `${PADDING_PX}px`;
+canvas.style.border = `${BORDER_PX}px solid red`;
+
+resizeCanvas();
 gameLoop();
